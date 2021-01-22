@@ -3,6 +3,9 @@ const config = require('./config');
 const { StringDecoder } = require('string_decoder');
 const url = require('url');
 
+const usersHandler = require('./lib/users');
+const helpers = require('./lib/helpers');
+
 const server = http.createServer((req, res) => {
     const parsedUrl = url.parse(req.url);
     const path = parsedUrl.pathname;
@@ -17,13 +20,13 @@ const server = http.createServer((req, res) => {
         buffer += decoder.write(chunk);
     });
     req.on('end', () => {
-        const _handler = handlers[trimmedPath] ? handlers[trimmedPath] : handlers.notFound;
+        const _handler = router[trimmedPath] ? router[trimmedPath] : router.notFound;
         const data = {
             trimmedPath,
             queryStringObject,
             method,
             headers,
-            payload: buffer
+            payload: helpers.parseJsonToObject(buffer),
         }
         _handler(data, (statusCode, payload) => {
             statusCode = typeof (statusCode) === 'number' ? statusCode : 200;
@@ -43,7 +46,9 @@ server.listen(config.port, () => {
     console.log('The app is running on port', config.port);
 })
 
-var handlers = {};
-handlers.notFound = (data, callback) => {
-    callback(404);
+var router = {
+    notFound: (data, callback) => {
+        callback(404);
+    },
+    users: usersHandler.users
 }
