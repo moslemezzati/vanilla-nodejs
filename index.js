@@ -7,7 +7,7 @@ const usersHandler = require('./lib/users');
 const helpers = require('./lib/helpers');
 
 const server = http.createServer((req, res) => {
-    const parsedUrl = url.parse(req.url);
+    const parsedUrl = url.parse(req.url, true);
     const path = parsedUrl.pathname;
     const trimmedPath = path.replace(/^\/+|\/+$/g, ''); //remove trial slash
     const queryStringObject = parsedUrl.query;
