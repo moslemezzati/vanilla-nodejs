@@ -50,5 +50,6 @@ var router = {
     notFound: (data, callback) => {
         callback(404);
     },
-    users: usersHandler.users
+    users: usersHandler.users,
+    tokens: usersHandler.tokens
 }
