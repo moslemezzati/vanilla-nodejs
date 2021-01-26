@@ -5,6 +5,7 @@ const url = require('url');
 
 const usersHandler = require('./lib/users');
 const helpers = require('./lib/helpers');
+const checksHandler = require('./lib/checks');
 
 const server = http.createServer((req, res) => {
     const parsedUrl = url.parse(req.url, true);
@@ -48,8 +49,9 @@ server.listen(config.port, () => {
 
 var router = {
     notFound: (data, callback) => {
-        callback(404);
+        callback(404, { Error: 'There is no handler for this request', data });
     },
     users: usersHandler.users,
-    tokens: usersHandler.tokens
+    tokens: usersHandler.tokens,
+    checks: checksHandler.checks,
 }
