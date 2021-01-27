@@ -3,7 +3,7 @@ const config = require('./config');
 const { StringDecoder } = require('string_decoder');
 const url = require('url');
 
-const usersHandler = require('./lib/users');
+const { handlers: usersHandler } = require('./lib/users');
 const helpers = require('./lib/helpers');
 const checksHandler = require('./lib/checks');
 
