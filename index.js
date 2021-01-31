@@ -5,7 +5,7 @@ var app = {};
 
 app.init = () => {
     server.init();
-    // workers.init();
+    workers.init();
 }
 
 app.init();
