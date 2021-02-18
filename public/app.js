@@ -64,9 +64,18 @@ app.client.request = function (headers, path, method, queryStringObject, payload
 };
 
 
+function showError(msg, formId) {
+    document.querySelector("#" + formId + " .formError").innerHTML = msg;
+    document.querySelector("#" + formId + " .formError").style.display = 'block';
+}
+
 
 app.bindForms = function () {
-    document.querySelector("form").addEventListener("submit", function (e) {
+    const form = document.querySelector("form");
+    if (!form) {
+        return;
+    }
+    form.addEventListener("submit", function (e) {
         e.preventDefault();
         var formId = this.id;
         var path = this.action;
@@ -82,16 +91,10 @@ app.bindForms = function () {
                 payload[elements[i].name] = valueOfElement;
             }
         }
-
         app.client.request(undefined, path, method, undefined, payload, function (statusCode, responsePayload) {
             if (statusCode !== 200 && statusCode !== 201) {
-
                 var error = typeof (responsePayload.Error) == 'string' ? responsePayload.Error : 'An error has occured, please try again';
-
-                document.querySelector("#" + formId + " .formError").innerHTML = error;
-
-                document.querySelector("#" + formId + " .formError").style.display = 'block';
-
+                showError(error, formId);
             } else {
                 app.formResponseProcessor(formId, payload, responsePayload);
             }
@@ -100,15 +103,115 @@ app.bindForms = function () {
     });
 };
 
+
 app.formResponseProcessor = function (formId, requestPayload, responsePayload) {
-    var functionToCall = false;
     if (formId == 'accountCreate') {
-        // @TODO Do something here now that the account has been created successfully
+        var newPayload = {
+            'phone': requestPayload.phone,
+            'password': requestPayload.password
+        };
+        app.client.request(undefined, 'api/tokens', 'POST', undefined, newPayload, function (newStatusCode, newResponsePayload) {
+            if (newStatusCode !== 200) {
+                return showError('Sorry, an error has occured. Please try again.', formId);
+            }
+            app.setSessionToken(newResponsePayload);
+            window.location = '/checks/all';
+        });
+    }
+    if (formId == 'sessionCreate') {
+        app.setSessionToken(responsePayload);
+        window.location = '/checks/all';
     }
 };
 
+
+app.getSessionToken = function () {
+    var tokenString = localStorage.getItem('token');
+    if (typeof (tokenString) == 'string') {
+        try {
+            var token = JSON.parse(tokenString);
+            app.config.sessionToken = token;
+            if (typeof (token) == 'object') {
+                app.setLoggedInClass(true);
+            } else {
+                app.setLoggedInClass(false);
+            }
+        } catch (e) {
+            app.config.sessionToken = false;
+            app.setLoggedInClass(false);
+        }
+    }
+};
+
+
+app.setLoggedInClass = function (add) {
+    var target = document.querySelector("body");
+    if (add) {
+        target.classList.add('loggedIn');
+    } else {
+        target.classList.remove('loggedIn');
+    }
+};
+
+
+app.setSessionToken = function (token) {
+    app.config.sessionToken = token;
+    var tokenString = JSON.stringify(token);
+    localStorage.setItem('token', tokenString);
+    if (typeof (token) == 'object') {
+        app.setLoggedInClass(true);
+    } else {
+        app.setLoggedInClass(false);
+    }
+};
+
+
+app.renewToken = function (callback) {
+    var currentToken = typeof (app.config.sessionToken) == 'object' ? app.config.sessionToken : false;
+    if (currentToken) {
+        var payload = {
+            'id': currentToken.id,
+            'extend': true,
+        };
+        app.client.request(undefined, 'api/tokens', 'PUT', undefined, payload, function (statusCode) {
+            if (statusCode == 200) {
+                var queryStringObject = { 'id': currentToken.id };
+                app.client.request(undefined, 'api/tokens', 'GET', queryStringObject, undefined, function (statusCode, responsePayload) {
+                    if (statusCode == 200) {
+                        app.setSessionToken(responsePayload);
+                        callback(false);
+                    } else {
+                        app.setSessionToken(false);
+                        callback(true);
+                    }
+                });
+            } else {
+                app.setSessionToken(false);
+                callback(true);
+            }
+        });
+    } else {
+        app.setSessionToken(false);
+        callback(true);
+    }
+};
+
+
+app.tokenRenewalLoop = function () {
+    setInterval(function () {
+        app.renewToken(function (err) {
+            if (!err) {
+                console.log("Token renewed successfully @ " + Date.now());
+            }
+        });
+    }, 1000 * 60);
+};
+
+
 app.init = function () {
     app.bindForms();
+    app.getSessionToken();
+    app.tokenRenewalLoop();
 };
 
 window.onload = function () {
