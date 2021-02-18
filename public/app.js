@@ -84,7 +84,7 @@ app.bindForms = function () {
         }
 
         app.client.request(undefined, path, method, undefined, payload, function (statusCode, responsePayload) {
-            if (statusCode !== 200) {
+            if (statusCode !== 200 && statusCode !== 201) {
 
                 var error = typeof (responsePayload.Error) == 'string' ? responsePayload.Error : 'An error has occured, please try again';
 
