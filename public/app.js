@@ -207,11 +207,27 @@ app.tokenRenewalLoop = function () {
     }, 1000 * 60);
 };
 
+app.logUserOut = function () {
+    var tokenId = typeof (app.config.sessionToken.id) == 'string' ? app.config.sessionToken.id : false;
+    app.client.request(undefined, 'api/tokens', 'DELETE', { 'id': tokenId }, undefined, () => {
+        app.setSessionToken(false);
+        window.location = '/session/deleted';
+    });
+};
+
+
+app.bindLogoutButton = function () {
+    document.getElementById("logoutButton").addEventListener("click", function (e) {
+        e.preventDefault();
+        app.logUserOut();
+    });
+};
 
 app.init = function () {
     app.bindForms();
     app.getSessionToken();
     app.tokenRenewalLoop();
+    app.bindLogoutButton();
 };
 
 window.onload = function () {
