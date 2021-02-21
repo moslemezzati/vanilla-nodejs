@@ -97,7 +97,8 @@ app.bindForms = function () {
                     }
                 }
             }
-            app.client.request(undefined, path, method, undefined, payload, function (statusCode, responsePayload) {
+            var queryStringObject = method == 'DELETE' ? payload : {};
+            app.client.request(undefined, path, method, queryStringObject, payload, function (statusCode, responsePayload) {
                 if (statusCode !== 200 && statusCode !== 201 && statusCode !== 204) {
                     var error = typeof (responsePayload.Error) == 'string' ? responsePayload.Error : 'An error has occured, please try again';
                     showError(error, formId);
@@ -117,7 +118,7 @@ app.formResponseProcessor = function (formId, requestPayload, responsePayload) {
             'password': requestPayload.password
         };
         app.client.request(undefined, 'api/tokens', 'POST', undefined, newPayload, function (newStatusCode, newResponsePayload) {
-            if (newStatusCode !== 200) {
+            if (newStatusCode !== 200 && newStatusCode !== 201) {
                 return showError('Sorry, an error has occured. Please try again.', formId);
             }
             app.setSessionToken(newResponsePayload);
@@ -129,8 +130,13 @@ app.formResponseProcessor = function (formId, requestPayload, responsePayload) {
         window.location = '/checks/all';
     }
     var formsWithSuccessMessages = ['accountEdit1', 'accountEdit2'];
-    if (formsWithSuccessMessages.indexOf(formId) > -1) {
+    if (formsWithSuccessMessages.includes(formId)) {
         document.querySelector("#" + formId + " .formSuccess").style.display = 'block';
+    }
+
+    if (formId == 'accountEdit3') {
+        app.logUserOut(false);
+        window.location = '/account/deleted';
     }
 };
 
