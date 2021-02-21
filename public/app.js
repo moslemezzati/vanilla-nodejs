@@ -75,36 +75,38 @@ app.bindForms = function () {
     if (!form) {
         return;
     }
-    form.addEventListener("submit", function (e) {
-        e.preventDefault();
-        var formId = this.id;
-        var path = this.action;
-        var method = this.method.toUpperCase();
+    var allForms = document.querySelectorAll("form");
+    for (var i = 0; i < allForms.length; i++) {
+        allForms[i].addEventListener("submit", function (e) {
+            e.preventDefault();
+            var formId = this.id;
+            var path = this.action;
+            var method = this.method.toUpperCase();
 
-        document.querySelector("#" + formId + " .formError").style.display = 'hidden';
+            document.querySelector("#" + formId + " .formError").style.display = 'hidden';
 
-        var payload = {};
-        var elements = this.elements;
-        for (var i = 0; i < elements.length; i++) {
-            if (elements[i].type !== 'submit') {
-                var valueOfElement = elements[i].type == 'checkbox' ? elements[i].checked : elements[i].value;
-                if (elements[i].name == '_method') {
-                    method = valueOfElement;
-                } else {
-                    payload[elements[i].name] = valueOfElement;
+            var payload = {};
+            var elements = this.elements;
+            for (var i = 0; i < elements.length; i++) {
+                if (elements[i].type !== 'submit') {
+                    var valueOfElement = elements[i].type == 'checkbox' ? elements[i].checked : elements[i].value;
+                    if (elements[i].name == '_method') {
+                        method = valueOfElement;
+                    } else {
+                        payload[elements[i].name] = valueOfElement;
+                    }
                 }
             }
-        }
-        app.client.request(undefined, path, method, undefined, payload, function (statusCode, responsePayload) {
-            if (statusCode !== 200 && statusCode !== 201 && statusCode !== 204) {
-                var error = typeof (responsePayload.Error) == 'string' ? responsePayload.Error : 'An error has occured, please try again';
-                showError(error, formId);
-            } else {
-                app.formResponseProcessor(formId, payload, responsePayload);
-            }
-
+            app.client.request(undefined, path, method, undefined, payload, function (statusCode, responsePayload) {
+                if (statusCode !== 200 && statusCode !== 201 && statusCode !== 204) {
+                    var error = typeof (responsePayload.Error) == 'string' ? responsePayload.Error : 'An error has occured, please try again';
+                    showError(error, formId);
+                } else {
+                    app.formResponseProcessor(formId, payload, responsePayload);
+                }
+            });
         });
-    });
+    }
 };
 
 
@@ -125,6 +127,10 @@ app.formResponseProcessor = function (formId, requestPayload, responsePayload) {
     if (formId == 'sessionCreate') {
         app.setSessionToken(responsePayload);
         window.location = '/checks/all';
+    }
+    var formsWithSuccessMessages = ['accountEdit1', 'accountEdit2'];
+    if (formsWithSuccessMessages.indexOf(formId) > -1) {
+        document.querySelector("#" + formId + " .formSuccess").style.display = 'block';
     }
 };
 
