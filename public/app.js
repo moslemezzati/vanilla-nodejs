@@ -88,11 +88,15 @@ app.bindForms = function () {
         for (var i = 0; i < elements.length; i++) {
             if (elements[i].type !== 'submit') {
                 var valueOfElement = elements[i].type == 'checkbox' ? elements[i].checked : elements[i].value;
-                payload[elements[i].name] = valueOfElement;
+                if (elements[i].name == '_method') {
+                    method = valueOfElement;
+                } else {
+                    payload[elements[i].name] = valueOfElement;
+                }
             }
         }
         app.client.request(undefined, path, method, undefined, payload, function (statusCode, responsePayload) {
-            if (statusCode !== 200 && statusCode !== 201) {
+            if (statusCode !== 200 && statusCode !== 201 && statusCode !== 204) {
                 var error = typeof (responsePayload.Error) == 'string' ? responsePayload.Error : 'An error has occured, please try again';
                 showError(error, formId);
             } else {
