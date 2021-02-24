@@ -138,6 +138,10 @@ app.formResponseProcessor = function (formId, requestPayload, responsePayload) {
         app.logUserOut(false);
         window.location = '/account/deleted';
     }
+
+    if (formId == 'checksCreate') {
+        window.location = '/checks/all';
+    }
 };
 
 
