@@ -218,7 +218,7 @@ app.renewToken = function (callback) {
             'extend': true,
         };
         app.client.request(undefined, 'api/tokens', 'PUT', undefined, payload, function (statusCode) {
-            if (statusCode == 200) {
+            if (statusCode == 204) {
                 var queryStringObject = { 'id': currentToken.id };
                 app.client.request(undefined, 'api/tokens', 'GET', queryStringObject, undefined, function (statusCode, responsePayload) {
                     if (statusCode == 200) {
